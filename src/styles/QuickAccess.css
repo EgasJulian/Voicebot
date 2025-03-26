@@ -1,0 +1,4 @@
+.custom-card:hover h6 {
+    color: #072146;
+    transition: color 0.3s ease;
+  }
