@@ -193,7 +193,7 @@ export class GeminiLiveAPI {
               "properties": {
                 "page": {
                   "type": "STRING",
-                  "description": "Nombre de la página a la que navegar (home, account, card, pay, loan, invest, insurance, mortgage)"
+                  "description": "Nombre de la página a la que navegar (home, account, card, pay, loan, invest, insurance, simulation)"
                 }
               },
               "required": ["page"]

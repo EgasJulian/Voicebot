@@ -13,30 +13,47 @@ import html2canvas from 'html2canvas';
 
 
 const PROMPT = `
-identidad:
-  nombre: MARCE
-  rol: Asistente virtual BBVA
-  función: Ayuda en navegación web y productos bancarios
+<assistant>
+  <identity>
+    <name>MARCE</name>
+    <role>Asistente virtual BBVA</role>
+    <function>Ayuda en navegación web y productos bancarios</function>
+  </identity>
 
-capacidades:
-  domina:
-    - Navegación web/app BBVA
-    - Productos bancarios básicos
-    - Procesos digitales
-  
-  prohibido:
-    - Ejecutar operaciones
-    - Dar asesoría legal/fiscal
-    - Compartir datos sensibles
-    - Comparar otros bancos
+  <capabilities>
+    <expertise>
+      <item>Navegación web/app BBVA</item>
+      <item>Productos bancarios básicos</item>
+      <item>Procesos digitales BBVA</item>
+      <item>Dudas frecuentes de clientes</item>
+    </expertise>
+    
+    <limitations>
+      <item>Ejecutar operaciones financieras</item>
+      <item>Brindar asesoría legal o fiscal especializada</item>
+      <item>Compartir datos sensibles de clientes</item>
+      <item>Realizar comparaciones con otros bancos</item>
+      <item>Modificar datos de cuenta</item>
+    </limitations>
+  </capabilities>
 
-interacción:
-  estilo: Profesional y directo
-  proceso:
-    1. Entender consulta
-    2. Dar solución concreta
-    3. Guiar paso a paso
-    4. Ofrecer producto si aplica
+  <interaction>
+    <tone>Profesional, directo y cercano</tone>
+    <language>Español claro y sencillo</language>
+    <process>
+      <step>Entender claramente la consulta del cliente</step>
+      <step>Proporcionar solución concreta y directa</step>
+      <step>Guiar paso a paso cuando se requiera</step>
+      <step>Ofrecer producto BBVA relevante si aplica a la situación</step>
+    </process>
+  </interaction>
+
+  <responses>
+    <greeting>Hola, soy MARCE, tu asistente virtual de BBVA. ¿En qué puedo ayudarte hoy?</greeting>
+    <farewell>¿Hay algo más en lo que pueda ayudarte? Estoy aquí para resolver tus dudas sobre BBVA.</farewell>
+    <insufficient_info>Para ayudarte mejor, necesito más información sobre tu consulta. ¿Podrías proporcionarme más detalles?</insufficient_info>
+  </responses>
+</assistant>
 `;
 let geminiAPI;
 
@@ -79,7 +96,6 @@ export default function MarceChat() {
   const [chatMode, setChatMode] = useState(null);
   const [videoSource, setVideoSource] = useState(null);
   const navigate = useNavigate();
-  const [isInterrupted, setIsInterrupted]  = useState(false);
 
   const apiKey = 'AIzaSyBsBmlnPIV76UoM4HfeCehv-AP9T8MJiSA';
   const host = 'generativelanguage.googleapis.com';
@@ -87,6 +103,7 @@ export default function MarceChat() {
 
   let audioBuffer = []
   let isPlaying = false;
+  let isInterrupted = false;
 
   async function close_connection() 
   {
@@ -150,7 +167,7 @@ export default function MarceChat() {
           path = '/seguro';
           navigate(path)
           break;
-        case 'mortgage':
+        case 'simulation':
           path = '/simulacion_hipoteca';
           navigate(path)
           break;
@@ -178,18 +195,17 @@ export default function MarceChat() {
       await geminiAPI.ensureConnected();
   }
 
-
     await startAudioStream(geminiAPI);
+
+    geminiAPI.onInterrupted = async () => {
+      console.log('Gemini interrupted');
+      audioBuffer = []
+    };
 
     geminiAPI.onAudioData = async (audioData) => {
       if (!isInterrupted) {
         await playAudioData(audioData);
       }
-    };
-
-    geminiAPI.onInterrupted = () => {
-      console.log('Gemini interrupted');
-      setIsInterrupted(true);
     };
 
     geminiAPI.onToolCall = async (toolCall) => {
@@ -315,12 +331,13 @@ export default function MarceChat() {
       
       const source = audioContextRef.current.createMediaStreamSource(stream);
       const processor = audioContextRef.current.createScriptProcessor(512, 1, 1);
+
       processor.onaudioprocess = (e) => {
         if (geminiAPI || geminiAPI.ws.readyState !== WebSocket.OPEN) {
             const inputData = e.inputBuffer.getChannelData(0);
             const pcmData = float32ToPcm16(inputData);
             const base64Data = btoa(String.fromCharCode(...new Uint8Array(pcmData.buffer)));
-            geminiAPI.sendAudioChunk(base64Data);         
+            geminiAPI.sendAudioChunk(base64Data);
         }
       };
 
@@ -342,20 +359,6 @@ export default function MarceChat() {
       stream.getTracks().forEach(track => track.stop());
       audioInputRef.current = null;
     }
-
-    // if (chatMode === 'video') {
-    //   setVideoEnabled(false);
-    //   setVideoSource(null);
-
-    //   if (videoStreamRef.current) {
-    //     videoStreamRef.current.getTracks().forEach(track => track.stop());
-    //     videoStreamRef.current = null;
-    //   }
-    //   // if (videoIntervalRef.current) {
-    //   //   clearInterval(videoIntervalRef.current);
-    //   //   videoIntervalRef.current = null;
-    //   // }
-    // }
 
     if (audioContextRef.current) {
       audioContextRef.current.close();
@@ -430,7 +433,7 @@ export default function MarceChat() {
         console.log('Canvas created successfully');
         
         try {
-          const base64image = canvas.toDataURL("image/jpeg", 0.7).split(',')[1];
+          const base64image = canvas.toDataURL("image/jpeg", 1).split(',')[1];
           
           const message = {
             realtimeInput: {

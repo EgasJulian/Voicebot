@@ -6,12 +6,12 @@ export default function Prestamo() {
   const prestamos = [
     { 
       img: "/credito-Libranza-bbva.jpg",
-      tipo: "Crédito de Libranza BBVA",
+      tipo: "Crédito de Libranza",
       descripcion: "Ideal para compras diarias con beneficios básicos.",
       beneficios: [
-        "Con mejor tasa que un crédito de consumo tradicional de BBVA.",
+        "Con mejor tasa que un crédito de consumo tradicional.",
         "Descuento automático de tu cuota fija a través de tu cuenta de nómina.",
-        "Solicitud del producto y tasa de interés de acuerdo al convenio de tu empresa con BBVA.",
+        "Solicitud del producto y tasa de interés de acuerdo al convenio de tu empresa.",
         "Un crédito que puedes utilizar en tu compra de cartera o para lo que necesites."
       ]
     },

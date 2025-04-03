@@ -4,9 +4,10 @@ import { Link } from "react-router-dom";
 
 export default function Header() {
   return (
-    <nav style={{background: "#072146"}} className="navbar navbar-expand-lg navbar-dark px-4">
+    <nav style={{background: "black"}} className="navbar navbar-expand-lg navbar-dark px-5 pb-3 pt-3">
       <Link className="navbar-brand" to="/">
-        <img src="logo_bbva_blanco.svg" alt="Logo BBVA Colombia - Creando Oportunidades" role="img" style={{ width: "150px", height: "auto", display: "block" }}/>
+      <h2>Home</h2>
+        {/* <img src="logo_bbva_blanco.svg" alt="Logo BBVA Colombia - Creando Oportunidades" role="img" style={{ width: "150px", height: "auto", display: "block" }}/> */}
       </Link>
       <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span className="navbar-toggler-icon"></span>

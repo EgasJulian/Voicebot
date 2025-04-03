@@ -1,38 +1,37 @@
 .bot-container {
-    position: relative;
-    /* Otros estilos que necesites */
+  position: relative;
+  /* Otros estilos que necesites */
+}
+
+/* Estilos para el cartel de neón */
+.neon-sign {
+  margin-top: 20px;
+  padding: 10px 20px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+  text-transform: uppercase;
+  background-color: #000;
+  border-radius: 5px;
+  text-align: center;
+  /* Efecto neón */
+  text-shadow:
+    0 0 5px #fff,
+    0 0 10px #fff,
+    0 0 20px #ff1177,
+    0 0 30px #ff1177,
+    0 0 40px #ff1177,
+    0 0 50px #ff1177,
+    0 0 75px #ff1177;
+  animation: flicker 1.5s infinite alternate;
+}
+
+/* Animación para simular parpadeo del neón */
+@keyframes flicker {
+  from {
+    opacity: 1;
   }
-  
-  /* Estilos para el cartel de neón */
-  .neon-sign {
-    margin-top: 20px;
-    padding: 10px 20px;
-    font-size: 24px;
-    font-weight: bold;
-    color: #fff;
-    text-transform: uppercase;
-    background-color: #000;
-    border-radius: 5px;
-    text-align: center;
-    /* Efecto neón */
-    text-shadow:
-      0 0 5px #fff,
-      0 0 10px #fff,
-      0 0 20px #ff1177,
-      0 0 30px #ff1177,
-      0 0 40px #ff1177,
-      0 0 50px #ff1177,
-      0 0 75px #ff1177;
-    animation: flicker 1.5s infinite alternate;
+  to {
+    opacity: 0.8;
   }
-  
-  /* Animación para simular parpadeo del neón */
-  @keyframes flicker {
-    from {
-      opacity: 1;
-    }
-    to {
-      opacity: 0.8;
-    }
-  }
-  
+}

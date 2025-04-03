@@ -6,11 +6,11 @@ export default function Invertir() {
   const inversionesBBVA = [
     {
       img: "Fondo-BBVA-Digital.im1726257023629im.jpg",
-      tipo: "Fondo BBVA Digital",
+      tipo: "Fondo Digital",
       beneficios: [
         "Inversión inicial desde $20.000",
-        "Tiempo de inversión a corto plazo",
-        "Disponibilidad de tu dinero inmediata",
+        "Tiempo de inversión a corto plazo.",
+        "Disponibilidad de tu dinero inmediata.",
         "Rentabilidad histórica anual 2023 de 16,29% E.A.",
         "Comisión de administración de 1,00 % E.A."
       ]
@@ -19,25 +19,25 @@ export default function Invertir() {
       img: "/banner-enterprises-card.im1572963815338im.jpg",
       tipo: "CDT Tradicional",
       beneficios: [
-        "Ahorro a bajo riesgo con alta rentabilidad",
-        "Plazos de inversión de 2 hasta 12 meses (1 año)"
+        "Ahorro a bajo riesgo con alta rentabilidad.",
+        "Plazos de inversión de 2 hasta 12 meses (1 año)."
       ]
     },
     {
       img: "/Inversion-Banca-Personal-CARD.im1562275027991im.jpg",
       tipo: "CDT Largo Plazo",
       beneficios: [
-        "Atractiva rentabilidad con tasa fija",
-        "Plazos de inversión hasta 36 meses (3 años)"
+        "Atractiva rentabilidad con tasa fija.",
+        "Plazos de inversión hasta 36 meses (3 años)."
       ]
     },
     {
       img: "/Fondo-BBVA-Paramo.im1726257026716im.jpg",
-      tipo: "Fondo BBVA Páramo",
+      tipo: "Fondo Páramo",
       beneficios: [
         "Inversión inicial desde $20.000",
-        "Tiempo de inversión a mediano - largo plazo",
-        "Disponibilidad de tu dinero inmediata",
+        "Tiempo de inversión a mediano - largo plazo.",
+        "Disponibilidad de tu dinero inmediata.",
         "Rentabilidad histórica anual 2023 de 28,22% E.A.",
         "Comisión de administración de 1,20 % E.A."
       ]
@@ -46,25 +46,25 @@ export default function Invertir() {
       img: "/Crosseling-Creditos-y-prestamos-para-empresas.im1644877928159im.jpg",
       tipo: "CDT IBR",
       beneficios: [
-        "Contrata un CDT en pesos y genera rentabilidad según la tasa de IBR",
-        "Plazos de inversión hasta 36 meses (3 años)"
+        "Contrata un CDT en pesos y genera rentabilidad según la tasa de IBR.",
+        "Plazos de inversión hasta 36 meses (3 años)."
       ]
     },
     {
       img: "/Seguridad-bbva-tips-mobile.im1662651444333im.jpg",
       tipo: "CDT Tasa Variable DTF",
       beneficios: [
-        "Contrata un CDT en pesos y genera rentabilidad según la tasa de DTF",
-        "Plazos de inversión hasta 36 meses (3 años)"
+        "Contrata un CDT en pesos y genera rentabilidad según la tasa de DTF.",
+        "Plazos de inversión hasta 36 meses (3 años)."
       ]
     },
     {
       img: "/Fondo-BBVA-Efectivo-Clase-A.im1726257026528im.jpg",
-      tipo: "Fondo BBVA Efectivo",
+      tipo: "Fondo Efectivo",
       beneficios: [
         "Inversión inicial desde $50.000",
-        "Tiempo de inversión a corto plazo",
-        "Disponibilidad de tu dinero inmediata",
+        "Tiempo de inversión a corto plazo.",
+        "Disponibilidad de tu dinero inmediata.",
         "Rentabilidad histórica anual 2023 de 13,80% E.A.",
         "Comisión de administración de 1,65 % E.A."
       ]
@@ -74,8 +74,8 @@ export default function Invertir() {
       tipo: "CDT Online",
       beneficios: [
         "Ahorra e invierte en un CDT Online",
-        "Si inviertes desde $500.000 a $5.000.000 obtienes una rentabilidad con tasa fija",
-        "Administración desde la App BBVA o BBVA net"
+        "Si inviertes desde $500.000 a $5.000.000 obtienes una rentabilidad con tasa fija.",
+        "Administración desde la App."
       ]
     }
   ];

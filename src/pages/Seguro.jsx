@@ -26,7 +26,7 @@ export default function Seguro() {
       ]
     },
     { 
-      img: "oncologico.jpg",
+      img: "Captura de pantalla 2025-03-28 102852.png",
       tipo: "Seguro Oncológico", 
       beneficios: [
         "Cobertura total de tratamientos oncológicos.",
@@ -36,7 +36,7 @@ export default function Seguro() {
       ]
     },
     { 
-      img: "/seguro-de-vida-vital.jpg",
+      img: "/Captura de pantalla 2025-03-28 103043.png",
       tipo: "Seguro Familia Vital", 
       beneficios: [
         "Cobertura médica para toda la familia.",
@@ -46,7 +46,7 @@ export default function Seguro() {
       ]
     },
     { 
-      img: "/seguro-de-vida-vital.jpg",
+      img: "/Captura de pantalla 2025-03-28 103208.png",
       tipo: "Seguro Accidentes Personales Salud", 
       beneficios: [
         "Indemnización por accidentes personales.",
@@ -62,28 +62,40 @@ export default function Seguro() {
           <div className="d-flex justify-content-center align-items-center min-vh-100" style={{ background: "#f8f9fa", padding: "40px" }}>
             <div className="container d-flex justify-content-center flex-wrap gap-4">
               {seguros.map((tarjeta, index) => (
-                <div key={index} className="card border-0 shadow-sm d-flex flex-column" style={{ width: "320px", minHeight: "500px" }}>
-                  {/* Imagen de la tarjeta */}
-                  <img src={tarjeta.img} className="card-img-top" alt={tarjeta.tipo} />
-  
-                  {/* Contenido de la tarjeta */}
-                  <div className="card-body d-flex flex-column flex-grow-1">
-                    <h5 className="fw-bold text-dark p-2">{tarjeta.tipo}</h5>
-  
-                    {/* Lista de beneficios con "-" */}
-                    <ul className="list-unstyled text-muted flex-grow-1">
-                      {tarjeta.beneficios.map((beneficio, i) => (
-                        <li className="p-1" key={i}>- {beneficio}</li>
-                      ))}
-                    </ul>
-  
-  
-                    {/* Botones alineados abajo */}
-                    <div className="custom-card mt-auto">
-                      <Link className="text-decoration-none" style={{ color: '#1e76b9' }}> <h6 className="fw-bold">Más información</h6></Link>
-                    </div>
+                <div
+                key={index}
+                className="card border-0 shadow-sm d-flex flex-column"
+                style={{ width: "320px", minHeight: "500px" }}
+              >
+                {/* Imagen de la tarjeta con tamaño fijo */}
+                <img
+                  src={tarjeta.img}
+                  className="card-img-top"
+                  alt={tarjeta.tipo}
+                  style={{ height: "200px", objectFit: "cover", width: "100%" }}
+                />
+              
+                {/* Contenido de la tarjeta */}
+                <div className="card-body d-flex flex-column flex-grow-1">
+                  <h5 className="fw-bold text-dark p-2">{tarjeta.tipo}</h5>
+              
+                  {/* Lista de beneficios con "-" */}
+                  <ul className="list-unstyled text-muted flex-grow-1">
+                    {tarjeta.beneficios.map((beneficio, i) => (
+                      <li className="p-1" key={i}>
+                        - {beneficio}
+                      </li>
+                    ))}
+                  </ul>
+              
+                  {/* Botones alineados abajo */}
+                  <div className="custom-card mt-auto">
+                    <Link className="text-decoration-none" style={{ color: "#1e76b9" }}>
+                      <h6 className="fw-bold">Más información</h6>
+                    </Link>
                   </div>
                 </div>
+              </div>
               ))}
             </div>
           </div>
