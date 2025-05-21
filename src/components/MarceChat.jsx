@@ -130,6 +130,10 @@ export default function MarceChat() {
           path = '/cuenta';
           navigate(path)
           break;
+        case 'credit':
+          path = '/credito';
+          navigate(path)
+          break;
         case 'card':
           path = '/tarjeta';
           navigate(path)
@@ -139,7 +143,7 @@ export default function MarceChat() {
           navigate(path)
           break;
         case 'loan':
-          path = '/prestamo';
+          path = '/credito';
           navigate(path)
           break;
         case 'invest':

@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Home from "./pages/Home";
 import Cuenta from "./pages/Cuenta";
+import Credito from "./pages/Credito";
 import Tarjeta from "./pages/Tarjeta";
 import Pagar from "./pages/Pagar";
 import Prestamo from "./pages/Prestamo";
@@ -18,6 +19,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/cuenta" element={<Cuenta />} />
+          <Route path="/credito" element={<Credito />} />
           <Route path="/tarjeta" element={<Tarjeta />} />
           <Route path="/pagar" element={<Pagar />} />
           <Route path="/prestamo" element={<Prestamo />} />

@@ -108,9 +108,9 @@ export class GeminiLiveAPI {
 <mandatory>Expresión de todos los números y valores en ESPAÑOL (ej. "cien millones", "trecientos cicuenta millones", "ocho").</mandatory>
 <capacidades>
   <domina>
-    <item>Navegación web BBVA: usa proactivamente navigate_to (home, account, card, pay, loan, invest, insurance, mortgage).</item>
-    <item>Conocimiento en productos bancarios básicos y procesos digitales.</item>
-    <item>Interpretación contextual de necesidades financieras y adaptación del tono.</item>
+    <item>Navegación web BBVA: usa proactivamente navigate_to (home, account, credit, card, pay, loan, invest, insurance, mortgage).</item>
+    <item>Conocimiento en productos bancarios básicos incluido el crédito de libranza y procesos digitales.</item>
+    <item>Interpretación contextual de términos y necesidades financieras, adaptar el tono de la conversación.</item>
   </domina>
   <prohibido>
     <item>Ejecutar transacciones reales, dar asesoría legal/fiscal, compartir datos sensibles o comparar bancos.</item>
@@ -134,7 +134,7 @@ export class GeminiLiveAPI {
   <herramientas>
     <herramienta>
       <nombre>navigate_to</nombre>
-      <descripcion>Navega a páginas de la aplicación (home, account, card, pay, loan, invest, insurance, mortgage).</descripcion>
+      <descripcion>Navega a páginas de la aplicación (home, account, credit, card, pay, loan, invest, insurance, mortgage).</descripcion>
     </herramienta>
     <herramienta>
       <nombre>close_connection</nombre>
@@ -167,13 +167,14 @@ export class GeminiLiveAPI {
     const defaultConfig = {
       "model": "models/gemini-2.0-flash-exp",
       "generation_config": {
-          "response_modalities": ["AUDIO"],
+          "response_modalities": ["AUDIO"],          
           "speech_config": {
               "voice_config": {
                   "prebuilt_voice_config": {
                       "voice_name": "Aoede"
                   }
-              }
+              },
+              "language_code": "es-ES"
           }
       },
       "system_instruction": {
@@ -193,7 +194,7 @@ export class GeminiLiveAPI {
               "properties": {
                 "page": {
                   "type": "STRING",
-                  "description": "Nombre de la página a la que navegar (home, account, card, pay, loan, invest, insurance, mortgage)"
+                  "description": "Nombre de la página a la que navegar (home, account, credit, card, pay, loan, invest, insurance, mortgage)"
                 }
               },
               "required": ["page"]
