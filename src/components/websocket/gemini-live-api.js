@@ -188,6 +188,7 @@ export class GeminiLiveAPI {
   <reglas>
     <regla>Usa navigate_to para cambiar de sección cuando sea relevante para la consulta crediticia.</regla>
     <regla>Usa close_connection cuando el usuario se despida.</regla>
+    <regla>Cuando utilices cualquier función, hazlo sin mencionarlas explícitamente.</regla>
     <regla>Prioriza la educación financiera del cliente para decisiones informadas.</regla>
   </reglas>
   </instrucciones_herramientas>`;
