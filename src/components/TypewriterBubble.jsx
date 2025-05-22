@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const TypewriterBubble = () => {
-  const fullText = "Hola, soy MARCE, ¿en qué te puedo ayudar?";
+  const fullText = "Hola, soy ALAN, ¿en qué te puedo ayudar?";
   const [displayedText, setDisplayedText] = useState("");
   const intervalRef = useRef(null);
   const timeoutRef = useRef(null);

@@ -11,10 +11,11 @@ import { useNavigate } from "react-router-dom";
 
 import html2canvas from 'html2canvas';
 
+const totalSteps = 6; // Define el número total de pasos
 
 const PROMPT = `
 identidad:
-  nombre: MARCE
+  nombre: ALAN
   rol: Asistente virtual BBVA
   función: Ayuda en navegación web y productos bancarios
 
@@ -99,6 +100,26 @@ export default function MarceChat() {
 
     localStorage.setItem("loanAmount", loanAmount);
   }
+
+  async function update_details() {
+    localStorage.removeItem("showDetails");
+
+    localStorage.setItem("showDetails", true);
+  }
+
+  async function advance_flow() {
+    let currentStep = parseInt(localStorage.getItem("currentStep"), 10);
+
+    if (isNaN(currentStep)) {
+      currentStep = 1;
+    } else if (currentStep < totalSteps) {
+      currentStep += 1;
+    } else {
+      currentStep = 6;
+    }
+
+    localStorage.setItem("currentStep", currentStep);
+}
 
   async function updateInterestRate(interestRate) {
     localStorage.removeItem("interestRate");
@@ -245,25 +266,10 @@ export default function MarceChat() {
             }
           });
 
-        } else if (call.name === "update_interest_rate") {
-          console.log('Executing update_interest_rate function call for:', call.args.interestRate);
+        } else if (call.name === "advance_flow") {
+          console.log('Executing advance_flow function call for:');
       
-          await updateInterestRate(call.args.interestRate);
-      
-          functionResponses.push({
-            id: call.id,
-            name: call.name,
-            response: {
-              result: {
-                object_value: { success: true }
-              }
-            }
-          });
-      
-      } else if (call.name === "update_loan_term") {
-          console.log('Executing update_loan_term function call for:', call.args.loanTerm);
-      
-          await updateLoanTerm(call.args.loanTerm);
+          await advance_flow();
       
           functionResponses.push({
             id: call.id,
@@ -275,10 +281,10 @@ export default function MarceChat() {
             }
           });
       
-      } else if (call.name === "update_down_payment") {
-          console.log('Executing update_down_payment function call for:', call.args.downPayment);
+      } else if (call.name === "show_details") {
+          console.log('Executing show_details function call for:');
       
-          await updateDownPayment(call.args.downPayment);
+          await update_details();
       
           functionResponses.push({
             id: call.id,
