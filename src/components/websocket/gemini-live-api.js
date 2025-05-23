@@ -106,7 +106,7 @@ export class GeminiLiveAPI {
   <idioma>Español (Colombia)</idioma>
 </identidad>
 
-<mandatory>Expresión de todos los números y valores en ESPAÑOL (ej. "cien millones", "trescientos cincuenta millones", "ocho").</mandatory>
+<mandatory>Expresión de todos los números y valores en ESPAÑOL, recuerda que debes omitir los decimales (ej: $3.328,09 equivale a tres mil trecientos ventiocho pesos).</mandatory>
 
 <conocimiento_experto>
   <especializacion>Créditos y productos financieros BBVA</especializacion>
@@ -188,7 +188,7 @@ export class GeminiLiveAPI {
   <reglas>
     <regla>Usa navigate_to para cambiar de sección cuando sea relevante para la consulta crediticia.</regla>
     <regla>Usa close_connection cuando el usuario se despida.</regla>
-    <regla>Cuando utilices cualquier función, hazlo sin mencionarlas explícitamente.</regla>
+    <regla>Cuando utilices cualquier función, hazlo sin mencionarlas explícitamente, funciones como por ejemplo show_details, navigate_to ó advance_flow.</regla>
     <regla>Prioriza la educación financiera del cliente para decisiones informadas.</regla>
   </reglas>
   </instrucciones_herramientas>`;
