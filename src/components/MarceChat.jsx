@@ -15,7 +15,7 @@ const totalSteps = 6; // Define el número total de pasos
 
 const PROMPT = `
 identidad:
-  nombre: ALAN
+  nombre: PACO
   rol: Asistente virtual BBVA
   función: Ayuda en navegación web y productos bancarios
 
@@ -80,7 +80,6 @@ export default function MarceChat() {
   const [chatMode, setChatMode] = useState(null);
   const [videoSource, setVideoSource] = useState(null);
   const navigate = useNavigate();
-  const [isInterrupted, setIsInterrupted]  = useState(false);
 
   const apiKey = 'AIzaSyBsBmlnPIV76UoM4HfeCehv-AP9T8MJiSA';
   const host = 'generativelanguage.googleapis.com';
@@ -88,6 +87,7 @@ export default function MarceChat() {
 
   let audioBuffer = []
   let isPlaying = false;
+  let isInterrupted = false;
 
   async function close_connection() 
   {
@@ -206,16 +206,16 @@ export default function MarceChat() {
 
     await startAudioStream(geminiAPI);
 
+    geminiAPI.onInterrupted = async () => {
+      console.log('Gemini interrupted');
+      audioBuffer = []
+    };
+
     geminiAPI.onAudioData = async (audioData) => {
       if (!isInterrupted) {
         await playAudioData(audioData);
       }
-    };
-
-    geminiAPI.onInterrupted = () => {
-      console.log('Gemini interrupted');
-      setIsInterrupted(true);
-    };
+    };    
 
     geminiAPI.onToolCall = async (toolCall) => {
       console.log('Received tool call:', toolCall);
@@ -352,20 +352,6 @@ export default function MarceChat() {
       stream.getTracks().forEach(track => track.stop());
       audioInputRef.current = null;
     }
-
-    // if (chatMode === 'video') {
-    //   setVideoEnabled(false);
-    //   setVideoSource(null);
-
-    //   if (videoStreamRef.current) {
-    //     videoStreamRef.current.getTracks().forEach(track => track.stop());
-    //     videoStreamRef.current = null;
-    //   }
-    //   // if (videoIntervalRef.current) {
-    //   //   clearInterval(videoIntervalRef.current);
-    //   //   videoIntervalRef.current = null;
-    //   // }
-    // }
 
     if (audioContextRef.current) {
       audioContextRef.current.close();
