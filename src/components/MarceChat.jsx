@@ -95,12 +95,6 @@ export default function MarceChat() {
     stopStream()
   }
 
-  async function update_loan_amount(loanAmount) {
-    localStorage.removeItem("loanAmount");
-
-    localStorage.setItem("loanAmount", loanAmount);
-  }
-
   async function update_details() {
     localStorage.removeItem("showDetails");
 
@@ -237,20 +231,6 @@ export default function MarceChat() {
             }
           });
 
-        } else if (call.name === 'update_loan_amount') {
-          console.log('Executing update_loan_amount function call for:', call.args.loanAmount);
-
-          const updateLoanAmount = await update_loan_amount(call.args.loanAmount);
-
-          functionResponses.push({
-            id: call.id,
-            name: call.name,
-            response: {
-              result: {
-                object_value: updateLoanAmount
-              }
-            }
-          });
         } else if (call.name === "close_connection") {
           console.log('Executing close_connection function call for:', call.args.farewellMessage);
 
