@@ -368,7 +368,7 @@ Expresión de todos los números y valores en ESPAÑOL, recuerda que debes omiti
 
     // Modificado: Configuración para salida de TEXTO de Gemini
     const defaultConfig = {
-      "model": "models/gemini-2.0-flash-exp", // o el modelo que estés usando
+      "model": "models/gemini-2.0-flash-live-001", // o el modelo que estés usando
       "generation_config": {
           "response_modalities": ["TEXT"], // Cambiado a TEXT
           // "speech_config": {} // Eliminada o comentada la speech_config
