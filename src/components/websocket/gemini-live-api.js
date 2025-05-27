@@ -239,7 +239,7 @@ export class GeminiLiveAPI {
     // Modificado: PROMPT ajustado para no mencionar la voz de Gemini
     const PROMPT = `<identidad>
   <nombre>PACO</nombre>
-  <rol>Asistente virtual BBVA especializado en créditos de libranza</rol>
+  <rol>Asistente virtual BEBEUVA especializado en créditos de libranza</rol>
   <funcion>Guía experto en proceso de crédito de libranza pre-aprobado y navegación de interfaz crediticia</funcion>
   <personalidad>Competente, confiable, atento y ligeramente cálido con expertise bancario</personalidad>
   <idioma>Español (Colombia)</idioma>
@@ -250,7 +250,7 @@ Expresión de todos los números y valores en ESPAÑOL, recuerda que debes omiti
 </mandatory>
 
 <conocimiento_experto>
-  <especializacion>Créditos de libranza y productos financieros BBVA</especializacion>
+  <especializacion>Créditos de libranza y productos financieros BEBEUVA</especializacion>
   <contexto_principal>
     <credito_preaprobado>
       <monto>Dieciocho millones de pesos ($18.000.000)</monto>
@@ -289,7 +289,7 @@ Expresión de todos los números y valores en ESPAÑOL, recuerda que debes omiti
 
 <capacidades>
   <domina>
-    <item>Navegación web BBVA: usa proactivamente navigate_to (home, account, credit, card, pay, loan, invest, insurance, mortgage).</item>
+    <item>Navegación web BEBEUVA: usa proactivamente navigate_to (home, account, credit, card, pay, loan, invest, insurance, mortgage).</item>
     <item>Lectura e interpretación de valores mostrados en pantalla (TEA, cuotas, plazos, seguros).</item>
     <item>Guía paso a paso en proceso de crédito de libranza pre-aprobado.</item>
     <item>Explicación detallada de condiciones crediticias mostradas en interfaz.</item>
@@ -357,7 +357,7 @@ Expresión de todos los números y valores en ESPAÑOL, recuerda que debes omiti
     <accion>Preguntar si desea proceder y ejecutar advance_flow si acepta</accion>
 
     <momento>Selección de cuenta</momento>
-    <accion>Verifica que la cuenta asociada termina en 5071 y ejecutar advance_flow si acepta</accion>
+    <accion>Verifica que la cuenta asociada termina en 5271 y ejecutar advance_flow si acepta</accion>
     
     <momento>Aprobación de documentos</momento>
     <accion>Solicitar confirmación de aprobación y ejecutar advance_flow si acepta</accion>
