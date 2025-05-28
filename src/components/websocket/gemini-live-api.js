@@ -1,7 +1,7 @@
 import { ElevenLabsClient } from 'elevenlabs'; // Importar el cliente de Eleven Labs
 
 // Configura tu clave API de Eleven Labs de forma segura (preferiblemente mediante variables de entorno)
-const ELEVENLABS_API_KEY = 'sk_ec362670c88570ca3ec2537964b1afe4bd7a91f4ecf8c78e'; // ¡REEMPLAZA ESTO!
+const ELEVENLABS_API_KEY = 'sk_ec362670c88570ca3ec2537964b1afe4bd7a91f4ecf8c78e'; 
 const ELEVENLABS_VOICE_ID = 'QtuQlibCvdX2iBrV4laj'; // Ejemplo: Voz "Rachel" de ElevenLabs, reemplaza si es necesario
 
 export class GeminiLiveAPI {

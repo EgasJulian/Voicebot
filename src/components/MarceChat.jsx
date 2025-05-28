@@ -13,60 +13,6 @@ import html2canvas from 'html2canvas';
 
 const totalSteps = 6;
 
-// Este PROMPT y config ya no son tan cruciales para la generación de audio,
-// ya que el backend ahora define el system_instruction para Gemini y maneja TTS.
-// Se puede simplificar o eliminar si no se usa para otros propósitos.
-const PROMPT_FRONTEND = ` 
-identidad:
-  nombre: PACO
-  rol: Asistente virtual BBVA
-  función: Ayuda en navegación web y productos bancarios
-
-capacidades:
-  domina:
-    - Navegación web/app BBVA
-    - Productos bancarios básicos
-    - Procesos digitales
-  
-  prohibido:
-    - Ejecutar operaciones
-    - Dar asesoría legal/fiscal
-    - Compartir datos sensibles
-    - Comparar otros bancos
-
-interacción:
-  estilo: Profesional y directo
-  proceso:
-    1. Entender consulta
-    2. Dar solución concreta
-    3. Guiar paso a paso
-    4. Ofrecer producto si aplica
-`;
-
-// La configuración de Gemini en el frontend ahora no necesita especificar la salida de audio.
-// El backend se encarga de la configuración completa enviada a Gemini.
-// Si `setupConfig` se pasa al constructor de `GeminiLiveAPI` desde el frontend,
-// entonces esta configuración SÍ sería utilizada.
-// El código actual del backend (`GeminiLiveAPI`) usa su propia `defaultConfig` si `setupConfig` es null.
-// Por simplicidad, y dado que el backend ahora controla el formato de respuesta de Gemini (texto),
-// esta config del frontend se puede mantener simple o ajustar para pasar solo el `model` y `system_instruction` si es necesario.
-const geminiFrontendConfig = { // Renombrado para evitar confusión con el config del backend
-  "model": "models/gemini-2.0-flash-exp", // Asegúrate que coincida con el backend si pasas esta config
-  // "generation_config": { // Ya no es necesario para la voz desde el frontend
-  //   "response_modalities": ["AUDIO"], 
-  //   "speech_config": { /* ... */ }
-  // },
-  "system_instruction": { // El backend usará su propio PROMPT más detallado
-    "parts": [
-      {
-        "text": PROMPT_FRONTEND // O un prompt más simple si el backend lo sobreescribe
-      }
-    ]
-  }
-  // Las 'tools' se definen en el backend.
-};
-
-
 let geminiAPI; // Instancia de la API
 
 export default function MarceChat() {
@@ -83,20 +29,10 @@ export default function MarceChat() {
 
   const navigate = useNavigate();
 
-  // No se necesitan video refs en este ejemplo simplificado basado en el código proporcionado.
-  // const [videoEnabled, setVideoEnabled] = useState(false);
-  // const videoRef = useRef(null);
-  // const canvasRef = useRef(null);
-  // const videoStreamRef = useRef(null);
-  // const videoIntervalRef = useRef(null);
-  // const [chatMode, setChatMode] = useState(null);
-  // const [videoSource, setVideoSource] = useState(null);
-
-
   const apiKey = 'AIzaSyBsBmlnPIV76UoM4HfeCehv-AP9T8MJiSA'; // ¡Esto debería estar en el backend!
   const host = 'generativelanguage.googleapis.com';
   // El endpoint del WebSocket se pasará al constructor de GeminiLiveAPI, no se usa directamente aquí.
-  const endpoint = `wss://${host}/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${apiKey}`;
+  const endpoint = `wss://${host}/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${apiKey}`;
   // let isInterrupted = false; // El backend maneja 'interrupted' de Gemini.
 
   // --- Funciones de Herramientas (sin cambios) ---
