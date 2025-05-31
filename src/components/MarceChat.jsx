@@ -29,7 +29,7 @@ export default function MarceChat() {
 
   const navigate = useNavigate();
 
-  const apiKey = 'AIzaSyBsBmlnPIV76UoM4HfeCehv-AP9T8MJiSA'; // ¡Esto debería estar en el backend!
+  const apiKey = 'AIzaSyBDJ_ajMtXnecQScU-A3yADo-lU5yS0Vtc'; // ¡Esto debería estar en el backend!
   const host = 'generativelanguage.googleapis.com';
   // El endpoint del WebSocket se pasará al constructor de GeminiLiveAPI, no se usa directamente aquí.
   const endpoint = `wss://${host}/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${apiKey}`;
