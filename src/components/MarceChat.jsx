@@ -8,46 +8,41 @@ import { EvaButtonStateTwo } from "./common/EvaButtonStateTwo";
 
 import { GeminiLiveAPI } from "./websocket/gemini-live-api"; // Ajusta la ruta si es necesario
 import { useNavigate } from "react-router-dom";
+import { WaveFile } from 'wavefile';
 
 import html2canvas from 'html2canvas';
 
 const totalSteps = 6;
 
 function parseAudioMimeType(mimeType) {
-    const defaults = { sampleRate: 24000, numChannels: 1, bitsPerSample: 16 }; // Valores predeterminados razonables
-    if (!mimeType) return defaults;
-
+    console.log("[parseAudioMimeType] MimeType RECIBIDO de Gemini:", mimeType);
+    const defaults = { sampleRate: 24000, numChannels: 1, bitsPerSample: 16 };
+    if (!mimeType) {
+        console.warn("[parseAudioMimeType] MimeType es nulo o indefinido, usando defaults:", defaults);
+        return defaults;
+    }
     const params = mimeType.split(';').map(param => param.trim());
-    const audioFormatPart = params[0].toLowerCase(); // ej. "audio/L16"
-
+    const audioFormatPart = params[0].toLowerCase();
     if (audioFormatPart.includes('l16') || audioFormatPart.includes('linear16')) {
         defaults.bitsPerSample = 16;
     } else {
-        console.warn(`[parseAudioMimeType] Formato de audio no reconocido como L16: ${audioFormatPart}. Asumiendo 16 bits.`);
-        defaults.bitsPerSample = 16; // Asumir 16 bits si no es claro
+        console.warn(`[parseAudioMimeType] Formato no reconocido como L16: ${audioFormatPart}. Asumiendo 16 bits.`);
     }
-
     for (let i = 1; i < params.length; i++) {
         const [key, value] = params[i].split('=').map(s => s.trim().toLowerCase());
         if (key && value) {
             if (key === 'rate' || key === 'samplerate') {
                 const rate = parseInt(value, 10);
-                if (!isNaN(rate)) {
-                    defaults.sampleRate = rate;
-                } else {
-                    console.warn(`[parseAudioMimeType] Tasa de muestreo inválida en mimeType: ${value}. Usando default ${defaults.sampleRate}Hz.`);
-                }
+                if (!isNaN(rate) && rate > 0) defaults.sampleRate = rate;
+                else console.warn(`[parseAudioMimeType] Tasa de muestreo inválida: ${value}. Usando default ${defaults.sampleRate}Hz.`);
             } else if (key === 'channels') {
                 const channels = parseInt(value, 10);
-                if (!isNaN(channels)) {
-                    defaults.numChannels = channels;
-                } else {
-                    console.warn(`[parseAudioMimeType] Número de canales inválido: ${value}. Usando default ${defaults.numChannels}.`);
-                }
+                if (!isNaN(channels) && channels > 0) defaults.numChannels = channels;
+                else console.warn(`[parseAudioMimeType] Canales inválidos: ${value}. Usando default ${defaults.numChannels}.`);
             }
         }
     }
-    console.log("[parseAudioMimeType] Parámetros de audio FINALES (después de parseo/defaults):", defaults);
+    console.log("[parseAudioMimeType] Parámetros de audio FINALES:", defaults);
     return defaults;
 }
 
@@ -131,6 +126,88 @@ export default function MarceChat() {
 
   const geminiApiKey = 'AIzaSyBDJ_ajMtXnecQScU-A3yADo-lU5yS0Vtc'; // ¡Esto debería estar idealmente en una config del lado del servidor o variable de entorno!
 
+  const playAudioWithWavefile = useCallback(async (samplesInt16Array, audioParams) => {
+        if (!mountedRef.current) return;
+        if (!samplesInt16Array || samplesInt16Array.length === 0) {
+            console.warn("MarceChat: [playAudioWithWavefile] No hay samples para reproducir.");
+            return;
+        }
+        if (!audioParams || !audioParams.sampleRate || !audioParams.numChannels || !audioParams.bitsPerSample) {
+            console.error("MarceChat: [playAudioWithWavefile] Faltan parámetros de audio válidos.", audioParams);
+            return;
+        }
+
+        console.log("MarceChat: [playAudioWithWavefile] Recibidos samples:", samplesInt16Array.length, "Params:", audioParams);
+
+        if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
+            audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+        } else if (audioContextRef.current.state === 'suspended') {
+            try {
+                await audioContextRef.current.resume();
+            } catch (resumeError) { /* ... manejo de error ... */ return; }
+        }
+
+        try {
+            // 1. Crear instancia de WaveFile
+            const wf = new WaveFile();
+
+            // 2. Alimentar WaveFile con los samples PCM Int16 y los parámetros
+            //    wf.fromScratch(numChannels, sampleRate, 'bitDepthStr', samplesArray)
+            wf.fromScratch(
+                audioParams.numChannels,
+                audioParams.sampleRate,
+                String(audioParams.bitsPerSample), // '16' para 16 bits
+                samplesInt16Array
+            );
+
+            // 3. Obtener el buffer WAV completo (esto es un Uint8Array en el navegador)
+            const wavUint8Array = wf.toBuffer();
+            console.log("MarceChat: [playAudioWithWavefile] Buffer WAV generado por wavefile, longitud:", wavUint8Array.byteLength);
+
+            if (wavUint8Array.byteLength <= 44) { // Solo encabezado o vacío
+                console.error("MarceChat: [playAudioWithWavefile] El buffer WAV generado es demasiado pequeño (solo encabezado o vacío).");
+                return;
+            }
+            
+            // 4. Decodificar este buffer WAV usando decodeAudioData
+            //    decodeAudioData espera un ArrayBuffer. El .buffer de un Uint8Array es el ArrayBuffer subyacente.
+            //    Es más seguro usar slice para obtener la porción correcta del buffer si byteOffset no es 0.
+            const wavArrayBuffer = wavUint8Array.buffer.slice(
+                wavUint8Array.byteOffset,
+                wavUint8Array.byteOffset + wavUint8Array.byteLength
+            );
+
+            const audioBuffer = await audioContextRef.current.decodeAudioData(wavArrayBuffer);
+            console.log("MarceChat: [playAudioWithWavefile] AudioBuffer decodificado desde WAV de wavefile.");
+
+            // Lógica de reproducción (similar a tu playNextInQueue, pero simplificada para un solo buffer)
+            if (currentAudioSourceNode.current) {
+                currentAudioSourceNode.current.onended = null;
+                try { currentAudioSourceNode.current.stop(); } catch (e) {}
+                currentAudioSourceNode.current.disconnect();
+            }
+
+            const sourceNode = audioContextRef.current.createBufferSource();
+            sourceNode.buffer = audioBuffer;
+            sourceNode.connect(audioContextRef.current.destination);
+            sourceNode.onended = () => {
+                if (mountedRef.current && currentAudioSourceNode.current === sourceNode) {
+                    isPlayingRef.current = false;
+                    currentAudioSourceNode.current = null;
+                }
+            };
+            sourceNode.start(0);
+            currentAudioSourceNode.current = sourceNode;
+            isPlayingRef.current = true;
+            console.log("MarceChat: [playAudioWithWavefile] Reproducción iniciada.");
+
+        } catch (error) {
+            console.error("MarceChat: [playAudioWithWavefile] Error:", error);
+            if (mountedRef.current) setError("Error al reproducir audio con wavefile: " + error.message);
+        }
+    // }, [setError, isPlaying, currentAudioSourceNode, audioContextRef]); // Ajustar dependencias
+    }, [setError]);
+  
   // --- Funciones de Herramientas (sin cambios en su lógica interna) ---
   async function close_connection() {
     console.log("Tool Call: close_connection solicitada.");
@@ -201,10 +278,10 @@ const initializeAndConnectGeminiAPI = useCallback(async () => {
         console.log(`MarceChat Callback: API TextData (Final: ${isFinal}):`, text);
         // Tu lógica para mostrar texto aquí
     };
-    api.onAudioData = async (audioBase64, mimeType) => {
+    api.onAudioData = async (samplesInt16Array, audioParams) => {
         if (!mountedRef.current) return;
-        console.log(`MarceChat Callback: API AudioData (de GEMINI) MimeType: ${mimeType}`);
-        await playAudioData(audioBase64, mimeType); // playAudioData necesita ser useCallback o definido fuera
+        console.log(`MarceChat Callback: API AudioData (SAMPLES) Recibidos. Samples: ${samplesInt16Array?.length}, Params:`, audioParams);
+        await playAudioWithWavefile(samplesInt16Array, audioParams); // playAudioData necesita ser useCallback o definido fuera
     };
     api.onToolCall = async (toolCall) => { /* ... tu lógica ... asegurándote de chequear mountedRef.current ... */ };
     api.onInterrupted = () => {

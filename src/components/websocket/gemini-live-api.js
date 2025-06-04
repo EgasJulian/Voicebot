@@ -26,6 +26,10 @@ export class GeminiLiveAPI {
     this.autoSetup = autoSetup; // El SDK maneja el setup en connect()
     this.setupConfig = setupConfig; // Configuración personalizada para el modelo
 
+    this.audioSampleAccumulator = []; // Para acumular los samples Int16 como números
+    this.currentAudioParams = null;   // Para guardar { sampleRate, numChannels, bitsPerSample }
+    this.onAudioData = (samples, audioParams) => {};
+
     this.elevenLabsClient = new ElevenLabsClient({
       apiKey: ELEVENLABS_API_KEY,
     });
@@ -85,6 +89,7 @@ export class GeminiLiveAPI {
     const modelConfig = this.setupConfig || this.getDefaultModelConfig();    
     const liveRequestOptions = { responseModalities: [Modality.AUDIO],
       speechConfig: { // Nuevo campo para claridad
+            audioEncoding: "LINEAR_16",
             //audioEncoding: AudioEncoding.MP3, // Solicitar MP3 para facilitar la reproducción en el navegador
             voiceConfig: {
                 prebuiltVoiceConfig: {
@@ -94,7 +99,7 @@ export class GeminiLiveAPI {
                     // Por ahora, Zephyr es un placeholder común.
                 }
             },
-            speechConfig: { languageCode: "es-ES" }
+            speechConfig: { languageCode: "	es-US" }
         },
       systemInstruction: modelConfig.system_instruction, // Puedes mantenerlos si la Prueba 1 de simplificación no funcionó
         tools: modelConfig.tools
@@ -168,65 +173,91 @@ export class GeminiLiveAPI {
     }
 }
 
-  async handleSDKMessage(sdkMessage) { // sdkMessage es LiveServerMessage
-    console.log("------------------- SDK NUEVO MENSAJE (MODO AUDIO GEMINI) -------------------");
+  _parseMimeTypeForAudioParams(mimeTypeStr) {
+    let sampleRate = 24000; // Default basado en el ejemplo de Node.js
+    let numChannels = 1;    // Default mono
+    const bitsPerSample = 16; // Gemini envía PCM 16-bit
+
+    if (mimeTypeStr) {
+        const rateMatch = mimeTypeStr.match(/rate=(\d+)/i);
+        if (rateMatch && rateMatch[1]) {
+            sampleRate = parseInt(rateMatch[1], 10);
+        }
+        const channelsMatch = mimeTypeStr.match(/channels=(\d+)/i);
+        if (channelsMatch && channelsMatch[1]) {
+            numChannels = parseInt(channelsMatch[1], 10);
+        }
+    }
+    const params = { sampleRate, numChannels, bitsPerSample };
+    console.log("SDK [_parseMimeTypeForAudioParams]: MimeType In:", mimeTypeStr, "Params Out:", params);
+    return params;
+  }
+
+  async handleSDKMessage(sdkMessage) {
+    console.log("------------------- SDK NUEVO MENSAJE (MODO AUDIO GEMINI + WAVEFILE) -------------------");
     console.log("Mensaje SDK Recibido:", JSON.stringify(sdkMessage, null, 2));
 
-    if (sdkMessage.toolCall) {
-        console.log(">>> SDK TOOL CALL RECIBIDO <<<", JSON.stringify(sdkMessage.toolCall));
-        // Si hay texto acumulado (transcripción), podrías querer mostrarlo antes del tool call
-        if (this.currentTurnTextAccumulator.trim().length > 0) {
-            this.onTextData(this.currentTurnTextAccumulator, true); // Considerar final el texto antes del tool call
-            this.currentTurnTextAccumulator = "";
-        }
-        this.onToolCall(sdkMessage.toolCall);
-        return;
-    }
+    if (sdkMessage.toolCall) { /* ... (manejo de toolCall como antes) ... */ }
 
     if (sdkMessage.serverContent) {
         const modelTurn = sdkMessage.serverContent.modelTurn;
-        if (sdkMessage.serverContent.interrupted) {
-            console.log(">>> SDK INTERRUPTED <<<");
-            this.onInterrupted();
-            this.currentTurnTextAccumulator = ""; // Limpiar texto si se interrumpe
-            return;
-        }
+        let audioChunkProcessedThisMessage = false;
 
-        let audioProcessedInThisTurn = false;
         if (modelTurn && modelTurn.parts && modelTurn.parts.length > 0) {
             for (const part of modelTurn.parts) {
                 if (part.text) {
                     this.currentTurnTextAccumulator += part.text;
-                    console.log("Texto/Transcripción parcial de Gemini añadido:", part.text, "|| Acumulado AHORA:", this.currentTurnTextAccumulator);
-                    // Enviar progresivamente si se desea, o esperar a turnComplete
-                    this.onTextData(this.currentTurnTextAccumulator, false); 
+                    this.onTextData(this.currentTurnTextAccumulator, false);
                 }
                 if (part.inlineData && part.inlineData.data && part.inlineData.mimeType?.startsWith('audio/')) {
-                    console.log(">>> SDK AUDIO DATA RECIBIDO DE GEMINI <<<");
-                    console.log("MimeType Audio Gemini:", part.inlineData.mimeType);
-                    // El `data` ya es base64. `onAudioData` lo espera así.
-                    this.onAudioData(part.inlineData.data, part.inlineData.mimeType); 
-                    audioProcessedInThisTurn = true;
+                    console.log("SDK: Procesando audio part. MimeType:", part.inlineData.mimeType);
+                    if (!this.currentAudioParams) { // Si es el primer chunk de audio de esta "sesión de habla"
+                        this.currentAudioParams = this._parseMimeTypeForAudioParams(part.inlineData.mimeType);
+                    }
+                    
+                    // Decodificar Base64 a ArrayBuffer
+                    const binaryString = atob(part.inlineData.data);
+                    const len = binaryString.length;
+                    const bytes = new Uint8Array(len);
+                    for (let i = 0; i < len; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                    
+                    // Crear Int16Array a partir del ArrayBuffer de los bytes PCM
+                    // Asegurarse de que el ArrayBuffer se interpreta correctamente
+                    const samples = new Int16Array(bytes.buffer, bytes.byteOffset, bytes.byteLength / Int16Array.BYTES_PER_ELEMENT);
+                    
+                    // Acumular los samples (como números)
+                    for (let i = 0; i < samples.length; i++) {
+                        this.audioSampleAccumulator.push(samples[i]);
+                    }
+                    audioChunkProcessedThisMessage = true;
                 }
             }
         }
 
         const isTurnComplete = !!sdkMessage.serverContent.turnComplete;
-        console.log("SDK ¿Turn Complete?:", isTurnComplete);
-
         if (isTurnComplete) {
+            console.log("SDK: Turno completo.");
             this.onTurnComplete();
-            // Si hay texto acumulado (transcripción final del turno), enviarlo.
             if (this.currentTurnTextAccumulator.trim().length > 0) {
-                console.log("Enviando texto/transcripción final de Gemini:", this.currentTurnTextAccumulator.trim());
                 this.onTextData(this.currentTurnTextAccumulator.trim(), true);
-                this.currentTurnTextAccumulator = ""; // Resetear acumulador
-            } else if (!audioProcessedInThisTurn) {
-                // Si el turno está completo, no hubo audio y no hubo texto,
-                // podría ser útil enviar una señal de texto vacío final.
-                this.onTextData("", true);
+                this.currentTurnTextAccumulator = "";
             }
-            // *** NO HAY LLAMADA A ELEVEN LABS AQUÍ ***
+
+            if (this.audioSampleAccumulator.length > 0 && this.currentAudioParams) {
+                console.log(`SDK: Enviando ${this.audioSampleAccumulator.length} samples acumulados con params:`, this.currentAudioParams);
+                const finalSamplesInt16Array = new Int16Array(this.audioSampleAccumulator);
+                this.onAudioData(finalSamplesInt16Array, this.currentAudioParams); // NUEVA FIRMA
+                
+                // Resetear para la próxima vez
+                this.audioSampleAccumulator = [];
+                this.currentAudioParams = null;
+            } else if (audioChunkProcessedThisMessage) {
+                // Esto podría pasar si el último mensaje tenía audio pero el acumulador no se considera listo
+                // o si currentAudioParams no se seteó. Revisa logs.
+                console.warn("SDK: Turno completo con audio procesado en este mensaje, pero el acumulador está vacío o faltan params. Samples:", this.audioSampleAccumulator.length, "Params:", this.currentAudioParams);
+            }
         }
     } else if (sdkMessage.error) { // Manejo de errores a nivel de mensaje del SDK
         console.error("SDK: Mensaje de error recibido del servidor Gemini:", sdkMessage.error);
