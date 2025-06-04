@@ -1,4 +1,4 @@
-import { GoogleGenAI, HarmCategory, HarmBlockThreshold, Modality } from '@google/genai';
+import { GoogleGenAI, HarmCategory, HarmBlockThreshold, Modality, Type } from '@google/genai';
 import { ElevenLabsClient } from 'elevenlabs'; // Importar el cliente de Eleven Labs
 
 // Configura tu clave API de Eleven Labs de forma segura (preferiblemente mediante variables de entorno)
@@ -195,9 +195,19 @@ export class GeminiLiveAPI {
 
   async handleSDKMessage(sdkMessage) {
     console.log("------------------- SDK NUEVO MENSAJE (MODO AUDIO GEMINI + WAVEFILE) -------------------");
-    console.log("Mensaje SDK Recibido:", JSON.stringify(sdkMessage, null, 2));
 
-    if (sdkMessage.toolCall) { /* ... (manejo de toolCall como antes) ... */ }
+    if (sdkMessage.toolCall) {
+        console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        console.log("SDK [handleSDKMessage]: >>> TOOL CALL RECIBIDO DEL MODELO <<<");
+        console.log(">>> SDK TOOL CALL RECIBIDO <<<", JSON.stringify(sdkMessage.toolCall, null, 2));
+        // Si hay texto acumulado (transcripción), podrías querer mostrarlo antes del tool call
+        if (this.currentTurnTextAccumulator.trim().length > 0) {
+            this.onTextData(this.currentTurnTextAccumulator, true); // Considerar final el texto antes del tool call
+            this.currentTurnTextAccumulator = "";
+        }
+        this.onToolCall(sdkMessage.toolCall);
+        return;
+    }
 
     if (sdkMessage.serverContent) {
         const modelTurn = sdkMessage.serverContent.modelTurn;
@@ -353,7 +363,7 @@ Expresión de todos los números y valores en ESPAÑOL, recuerda que debes omiti
         </herramienta>
         <herramienta>
             <nombre>show_details</nombre>
-            <descripcion>Muestra información adicional de tasas y costos para el crédito.</descripcion>
+            <descripcion>Muestra en pantalla información completa sobre tasas y costos para el crédito.</descripcion>
         </herramienta>
         <herramienta>
             <nombre>advance_flow</nombre>
@@ -374,7 +384,7 @@ Expresión de todos los números y valores en ESPAÑOL, recuerda que debes omiti
         <momento>Inicio</momento>
         <accion>Saluda y presentate</accion>
         <momento>Explorar Crédito de libranza</momento>
-        <accion>Presentar condiciones del crédito pre-aprobado (valor, plazo, cuota y Tasa efectiva anual), ejecutar show_details si lo solicitan</accion>
+        <accion>Presentar condiciones del crédito pre-aprobado (valor, plazo, cuota y Tasa efectiva anual), ejecutar show_details si desean ver información completa o adicional de tasas y costos</accion>
         <momento>Confirmación de continuidad</momento>
         <accion>Preguntar si desea proceder y ejecutar advance_flow si acepta</accion>
         <momento>Selección de cuenta</momento>
@@ -396,10 +406,10 @@ Expresión de todos los números y valores en ESPAÑOL, recuerda que debes omiti
               name: "navigate_to",
               description: "Navega a diferentes páginas de la aplicación",
               parameters: {
-                type: "OBJECT",
+                type: Type.OBJECT,
                 properties: {
                   page: {
-                    type: "STRING",
+                    type: Type.STRING,
                     description: "Nombre de la página a la que navegar (home, account, credit, card, pay, loan, invest, insurance, mortgage)"
                   }
                 },
@@ -412,7 +422,7 @@ Expresión de todos los números y valores en ESPAÑOL, recuerda que debes omiti
             },
             {
               name: "show_details",
-              description: "Muestra información completa de tasas y costos para el crédito"
+              description: "Muestra en pantalla información completa de tasas y costos para el crédito",
             },
             {
               name: "advance_flow",
@@ -471,22 +481,28 @@ Expresión de todos los números y valores en ESPAÑOL, recuerda que debes omiti
     await this.sendClientTurns([], true);
   }
 
-  async sendToolResponse(functionResponsesArray) {
+  async sendToolResponse(functionResponsesArray) { // functionResponsesArray es el array que creaste en MarceChat.jsx
     if (!this.session) {
-      this.onError("SDK: Sesión no activa para enviar respuesta de herramienta.");
-      return;
+        console.warn('GeminiLiveAPI: No hay sesión activa para enviar respuesta de herramienta.');
+        this.onError('Intento de enviar respuesta de herramienta sin sesión activa.');
+        return;
     }
+    console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    console.log("SDK [sendToolResponse]: Enviando ToolResponse al modelo:", JSON.stringify({ functionResponses: functionResponsesArray }, null, 2));
+    // El SDK espera un objeto con una clave 'function_responses' que contenga el array.
+    const toolResponsePayload = {
+        function_responses: functionResponsesArray 
+    };
+
+    console.log('GeminiLiveAPI: Enviando payload de respuesta de herramienta al SDK:', JSON.stringify(toolResponsePayload, null, 2));
     try {
-      // functionResponsesArray debe ser [{id: string, name: string, response: object}]
-      await this.session.sendToolResponse({
-        functionResponses: functionResponsesArray
-      });
-      console.log('SDK: Respuesta de herramienta enviada:', functionResponsesArray);
+        await this.session.sendToolResponse(toolResponsePayload);
+        console.log('SDK [sendToolResponse]: ToolResponse enviado exitosamente al SDK.');
     } catch (error) {
-      console.error("SDK: Error enviando respuesta de herramienta:", error);
-      this.onError(error.message || "Error al enviar respuesta de herramienta con SDK");
+        console.error('GeminiLiveAPI: Error enviando respuesta de herramienta al SDK:', error);
+        this.onError(`Error enviando respuesta de herramienta: ${error.message}`);
     }
-  }
+}
 
   isConnected() {
     // El SDK no expone el estado del WebSocket directamente de forma síncrona fácil.

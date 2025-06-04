@@ -127,17 +127,33 @@ export default function MarceChat() {
   const geminiApiKey = 'AIzaSyBDJ_ajMtXnecQScU-A3yADo-lU5yS0Vtc'; // ¡Esto debería estar idealmente en una config del lado del servidor o variable de entorno!
 
   const playAudioWithWavefile = useCallback(async (samplesInt16Array, audioParams) => {
-        if (!mountedRef.current) return;
-        if (!samplesInt16Array || samplesInt16Array.length === 0) {
-            console.warn("MarceChat: [playAudioWithWavefile] No hay samples para reproducir.");
-            return;
-        }
+    if (!mountedRef.current) {
+        console.log("MarceChat: [playAudioWithWavefile] Abortado, componente no montado.");
+        return;
+    }
+    if (!samplesInt16Array || samplesInt16Array.length === 0) {
+        console.warn("MarceChat: [playAudioWithWavefile] No hay samples para reproducir.");
+        return;
+    }
         if (!audioParams || !audioParams.sampleRate || !audioParams.numChannels || !audioParams.bitsPerSample) {
             console.error("MarceChat: [playAudioWithWavefile] Faltan parámetros de audio válidos.", audioParams);
             return;
         }
 
-        console.log("MarceChat: [playAudioWithWavefile] Recibidos samples:", samplesInt16Array.length, "Params:", audioParams);
+        console.log("MarceChat: [playAudioWithWavefile] Recibidos samples:", samplesInt16Array.length);
+
+        if (currentAudioSourceNode.current) {
+        console.log("MarceChat: [playAudioWithWavefile] Deteniendo y limpiando audio anterior...");
+        currentAudioSourceNode.current.onended = null; // Quitar el callback onended anterior para evitar efectos secundarios
+        try {
+            currentAudioSourceNode.current.stop();
+        } catch (e) {
+            console.warn("MarceChat: [playAudioWithWavefile] Error menor al detener el source anterior (podría ya estar detenido):", e.message);
+        }
+        currentAudioSourceNode.current.disconnect();
+        currentAudioSourceNode.current = null; // Marcar como nulo INMEDIATAMENTE
+        isPlayingRef.current = false; // Actualizar el estado de reproducción
+        } 
 
         if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
             audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
@@ -148,60 +164,57 @@ export default function MarceChat() {
         }
 
         try {
-            // 1. Crear instancia de WaveFile
-            const wf = new WaveFile();
+        const wf = new WaveFile();
+        wf.fromScratch(audioParams.numChannels, audioParams.sampleRate, String(audioParams.bitsPerSample), samplesInt16Array);
+        const wavUint8Array = wf.toBuffer();
+        if (wavUint8Array.byteLength <= 44) { /* ... error si es muy pequeño ... */ return; }
+        const wavArrayBuffer = wavUint8Array.buffer.slice(wavUint8Array.byteOffset, wavUint8Array.byteOffset + wavUint8Array.byteLength);
 
-            // 2. Alimentar WaveFile con los samples PCM Int16 y los parámetros
-            //    wf.fromScratch(numChannels, sampleRate, 'bitDepthStr', samplesArray)
-            wf.fromScratch(
-                audioParams.numChannels,
-                audioParams.sampleRate,
-                String(audioParams.bitsPerSample), // '16' para 16 bits
-                samplesInt16Array
-            );
+        console.log("MarceChat: [playAudioWithWavefile] Decodificando datos WAV...");
+        const audioBuffer = await audioContextRef.current.decodeAudioData(wavArrayBuffer);
+        console.log("MarceChat: [playAudioWithWavefile] AudioBuffer decodificado.");
 
-            // 3. Obtener el buffer WAV completo (esto es un Uint8Array en el navegador)
-            const wavUint8Array = wf.toBuffer();
-            console.log("MarceChat: [playAudioWithWavefile] Buffer WAV generado por wavefile, longitud:", wavUint8Array.byteLength);
+        if (!mountedRef.current) { // Volver a chequear si el componente se desmontó durante el await
+            console.log("MarceChat: [playAudioWithWavefile] Componente desmontado durante decodeAudioData. Abortando reproducción.");
+            return;
+        }
+        
+        // Si currentAudioSourceNode.current fue seteado por otra llamada concurrente mientras esperábamos decodeAudioData,
+        // lo detenemos de nuevo. Esto es una doble seguridad.
+        if (currentAudioSourceNode.current) {
+            console.warn("MarceChat: [playAudioWithWavefile] currentAudioSourceNode fue reasignado durante decodeAudioData. Deteniendo de nuevo.");
+            currentAudioSourceNode.current.onended = null; 
+            try { currentAudioSourceNode.current.stop(); } catch (e) {}
+            currentAudioSourceNode.current.disconnect();
+            currentAudioSourceNode.current = null;
+            isPlayingRef.current = false;
+        }
 
-            if (wavUint8Array.byteLength <= 44) { // Solo encabezado o vacío
-                console.error("MarceChat: [playAudioWithWavefile] El buffer WAV generado es demasiado pequeño (solo encabezado o vacío).");
-                return;
+        const sourceNode = audioContextRef.current.createBufferSource();
+        sourceNode.buffer = audioBuffer;
+        sourceNode.connect(audioContextRef.current.destination);
+        
+        currentAudioSourceNode.current = sourceNode; // Asignar el NUEVO source ANTES de onended
+        isPlayingRef.current = true;
+
+        sourceNode.onended = () => {
+            console.log("MarceChat: [playAudioWithWavefile] source.onended disparado.");
+            // Solo limpiar si este es el source que realmente terminó y el componente está montado
+            if (mountedRef.current && currentAudioSourceNode.current === sourceNode) {
+                console.log("MarceChat: [playAudioWithWavefile] Limpiando después de que el audio actual terminó.");
+                isPlayingRef.current = false;
+                // No es necesario desconectar aquí si no se va a reutilizar, pero no hace daño.
+                // sourceNode.disconnect(); // El source ya está desconectado implícitamente al terminar si no está en loop.
+                currentAudioSourceNode.current = null;
+            } else if (currentAudioSourceNode.current !== sourceNode) {
+                console.log("MarceChat: [playAudioWithWavefile] source.onended disparado para un source antiguo/diferente. Ignorando limpieza de currentAudioSourceNode.");
             }
-            
-            // 4. Decodificar este buffer WAV usando decodeAudioData
-            //    decodeAudioData espera un ArrayBuffer. El .buffer de un Uint8Array es el ArrayBuffer subyacente.
-            //    Es más seguro usar slice para obtener la porción correcta del buffer si byteOffset no es 0.
-            const wavArrayBuffer = wavUint8Array.buffer.slice(
-                wavUint8Array.byteOffset,
-                wavUint8Array.byteOffset + wavUint8Array.byteLength
-            );
+        };
+        
+        console.log("MarceChat: [playAudioWithWavefile] Iniciando reproducción del nuevo AudioBuffer.");
+        sourceNode.start(0);
 
-            const audioBuffer = await audioContextRef.current.decodeAudioData(wavArrayBuffer);
-            console.log("MarceChat: [playAudioWithWavefile] AudioBuffer decodificado desde WAV de wavefile.");
-
-            // Lógica de reproducción (similar a tu playNextInQueue, pero simplificada para un solo buffer)
-            if (currentAudioSourceNode.current) {
-                currentAudioSourceNode.current.onended = null;
-                try { currentAudioSourceNode.current.stop(); } catch (e) {}
-                currentAudioSourceNode.current.disconnect();
-            }
-
-            const sourceNode = audioContextRef.current.createBufferSource();
-            sourceNode.buffer = audioBuffer;
-            sourceNode.connect(audioContextRef.current.destination);
-            sourceNode.onended = () => {
-                if (mountedRef.current && currentAudioSourceNode.current === sourceNode) {
-                    isPlayingRef.current = false;
-                    currentAudioSourceNode.current = null;
-                }
-            };
-            sourceNode.start(0);
-            currentAudioSourceNode.current = sourceNode;
-            isPlayingRef.current = true;
-            console.log("MarceChat: [playAudioWithWavefile] Reproducción iniciada.");
-
-        } catch (error) {
+    } catch (error) {
             console.error("MarceChat: [playAudioWithWavefile] Error:", error);
             if (mountedRef.current) setError("Error al reproducir audio con wavefile: " + error.message);
         }
@@ -283,11 +296,61 @@ const initializeAndConnectGeminiAPI = useCallback(async () => {
         console.log(`MarceChat Callback: API AudioData (SAMPLES) Recibidos. Samples: ${samplesInt16Array?.length}, Params:`, audioParams);
         await playAudioWithWavefile(samplesInt16Array, audioParams); // playAudioData necesita ser useCallback o definido fuera
     };
-    api.onToolCall = async (toolCall) => { /* ... tu lógica ... asegurándote de chequear mountedRef.current ... */ };
+    api.onToolCall = async (toolCall) => {
+        if (!mountedRef.current) {
+            console.warn("MarceChat: [onToolCall] ignorado, componente no montado.");
+            return;
+        }
+        console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+        console.log('MarceChat Callback: api.onToolCall RECIBIDO:', JSON.stringify(toolCall, null, 2));
+        const functionCalls = toolCall.functionCalls;
+        const functionResponses = [];
+        for (const call of functionCalls) {
+            console.log(`MarceChat: Procesando functionCall: ${call.name}`, "Args:", call.args);
+            let responsePayload = { success: true };
+            try {
+                if (call.name === 'navigate_to') {
+                    responsePayload = await navigate_to(call.args.page);
+                } else if (call.name === "close_connection") {
+                    await close_connection(); // Esto podría llamar a stopStream
+                                          // lo que podría cambiar isStreaming.
+                                          // Si close_connection es llamado por el modelo,
+                                          // el stream debe terminar.
+                } else if (call.name === "advance_flow") {
+                    await advance_flow();
+                } else if (call.name === "show_details") { // Asumiendo que esta es la correcta, antes 'update_details'
+                    await update_details();
+                } else {
+                    console.warn(`Función ${call.name} no implementada.`);
+                    responsePayload = { success: false, error: `Función ${call.name} no implementada.` };
+                }
+            } catch (toolError) {
+                console.error(`Error ejecutando la herramienta ${call.name}:`, toolError);
+                responsePayload = { success: false, error: `Error en ${call.name}: ${toolError.message}` };
+            }
+            functionResponses.push({
+                id: call.id,
+                name: call.name,
+                response: { status: "EXECUTED", function_name: call.name, result: "ok" }
+            });
+        }
+        if (mountedRef.current && geminiApiRef.current && functionResponses.length > 0) {
+            console.log("MarceChat: Enviando respuestas de herramientas a GeminiLiveAPI:", functionResponses);
+            geminiApiRef.current.sendToolResponse(functionResponses);
+        }
+    };
+
     api.onInterrupted = () => {
-        if (!mountedRef.current) return;
-        console.log('MarceChat Callback: API Interrupted.');
-        // ... tu lógica de interrupción ...
+      if (!mountedRef.current) return;
+      console.log('MarceChat Callback: API Interrupted.');
+      if (currentAudioSourceNode.current) {
+        currentAudioSourceNode.current.onended = null;
+        try { currentAudioSourceNode.current.stop(); } catch (e) { /* ignore */ }
+        currentAudioSourceNode.current.disconnect();
+        currentAudioSourceNode.current = null;
+      }
+      audioPlaybackQueue.current = [];
+      isPlayingRef.current = false;
     };
     
     api.onClose = (closeEvent) => {
