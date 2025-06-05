@@ -225,6 +225,7 @@ export default function MarceChat() {
   async function close_connection() {
     console.log("Tool Call: close_connection solicitada.");
     await new Promise(resolve => setTimeout(resolve, 1000));
+    stopStream();
     // stopStream se llama dentro de la lógica de manejo de la herramienta o por el usuario
     // No es necesario llamar a stopStream() aquí directamente si la herramienta implica el fin de la interacción.
     // Si la herramienta es solo 'cerrar la conexión' pero el widget podría seguir, entonces stopStream no debe llamarse aquí.
@@ -331,7 +332,7 @@ const initializeAndConnectGeminiAPI = useCallback(async () => {
             functionResponses.push({
                 id: call.id,
                 name: call.name,
-                response: { status: "EXECUTED", function_name: call.name, result: "ok" }
+                response: { result: { object_value: responsePayload } }
             });
         }
         if (mountedRef.current && geminiApiRef.current && functionResponses.length > 0) {
@@ -567,7 +568,7 @@ const startAudioInputStream = async () => {
         }
 
         const source = audioContextRef.current.createMediaStreamSource(stream);
-        const processor = audioContextRef.current.createScriptProcessor(2048, 1, 1); // Usa el buffer size de tus logs
+        const processor = audioContextRef.current.createScriptProcessor(512, 1, 1); // Usa el buffer size de tus logs
         console.log("MarceChat: [startAudioInputStream] ScriptProcessorNode creado. Buffer size:", processor.bufferSize);
 
         processor.onaudioprocess = (e) => {

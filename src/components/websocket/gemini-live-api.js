@@ -1,10 +1,9 @@
-import { GoogleGenAI, HarmCategory, HarmBlockThreshold, Modality, Type } from '@google/genai';
+import { GoogleGenAI, HarmCategory, HarmBlockThreshold, Modality, Type, FunctionResponse } from '@google/genai';
 import { ElevenLabsClient } from 'elevenlabs'; // Importar el cliente de Eleven Labs
 
 // Configura tu clave API de Eleven Labs de forma segura (preferiblemente mediante variables de entorno)
 const ELEVENLABS_API_KEY = 'sk_ec362670c88570ca3ec2537964b1afe4bd7a91f4ecf8c78e';
 const ELEVENLABS_VOICE_ID = 'QtuQlibCvdX2iBrV4laj'; // Ejemplo: Voz "Rachel" de ElevenLabs, reemplaza si es necesario
-//const apiKey = 'AIzaSyBsBmlnPIV76UoM4HfeCehv-AP9T8MJiSA'; 
 
 export class GeminiLiveAPI {
   constructor(geminiApiKey, autoSetup = true, setupConfig = null) {
@@ -99,7 +98,7 @@ export class GeminiLiveAPI {
                     // Por ahora, Zephyr es un placeholder común.
                 }
             },
-            speechConfig: { languageCode: "	es-US" }
+            languageCode: "es-US"
         },
       systemInstruction: modelConfig.system_instruction, // Puedes mantenerlos si la Prueba 1 de simplificación no funcionó
         tools: modelConfig.tools
@@ -396,8 +395,8 @@ Expresión de todos los números y valores en ESPAÑOL, recuerda que debes omiti
     </flujo_conversacion>
 </instrucciones_herramientas>`;
 
-    return { // Este es el objeto que va DENTRO de "setup" gemini-2.0-flash-live-001
-      model: "models/gemini-2.5-flash-preview-native-audio-dialog",
+    return { // Este es el objeto que va DENTRO de "setup" gemini-2.0-flash-live-001, gemini-2.5-flash-preview-native-audio-dialog
+      model: "models/gemini-2.0-flash-live-001",
       system_instruction: PROMPT ,
       tools: [
         {
@@ -491,7 +490,7 @@ Expresión de todos los números y valores en ESPAÑOL, recuerda que debes omiti
     console.log("SDK [sendToolResponse]: Enviando ToolResponse al modelo:", JSON.stringify({ functionResponses: functionResponsesArray }, null, 2));
     // El SDK espera un objeto con una clave 'function_responses' que contenga el array.
     const toolResponsePayload = {
-        function_responses: functionResponsesArray 
+        functionResponses: functionResponsesArray 
     };
 
     console.log('GeminiLiveAPI: Enviando payload de respuesta de herramienta al SDK:', JSON.stringify(toolResponsePayload, null, 2));
