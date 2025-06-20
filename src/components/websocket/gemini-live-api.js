@@ -243,10 +243,10 @@ Expresión de todos los números y valores en ESPAÑOL, recuerda que debes omiti
               name: "navigate_to",
               description: "Navega a diferentes páginas de la aplicación",
               parameters: {
-                type: Type.OBJECT,
+                type: "OBJECT",
                 properties: {
                   page: {
-                    type: Type.STRING,
+                    type: "STRING",
                     description: "Nombre de la página a la que navegar (home, account, credit, card, pay, loan, invest, insurance, mortgage)"
                   }
                 },
