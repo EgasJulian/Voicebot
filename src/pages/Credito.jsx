@@ -362,7 +362,7 @@ export default function Credito() {
     },
     cuentas: [
       { tipo: "Cuenta nómina", numero: "1234", saldo: "$5.000.000,00" },
-      { tipo: "Ahorros", numero: "5071", saldo: "$100.000.000,00" },
+      { tipo: "Ahorros", numero: "5271", saldo: "$100.000.000,00" },
       { tipo: "Cuenta corriente", numero: "2349", saldo: "$500.000,00" }
     ],
     documentos: [
