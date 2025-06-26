@@ -207,11 +207,11 @@ Expresión de todos los números y valores en ESPAÑOL, recuerda que debes omiti
         <momento>Confirmación de continuidad</momento>
         <accion>Preguntar si desea proceder y ejecutar advance_flow si acepta</accion>
         <momento>Selección de cuenta</momento>
-        <accion>Verifica que la cuenta asociada termina en 5271 y ejecutar advance_flow si acepta</accion>
+        <accion>Verifica que la cuenta asociada termina en 5271, en caso que el usuario acepte la cuenta ejecutar advance_flow</accion>
         <momento>Aprobación de documentos</momento>
-        <accion>Solicitar confirmación de aprobación y ejecutar advance_flow si acepta</accion>
+        <accion>Solicitar confirmación de aprobación de los documentos, si el usuario acepta ejecutar advance_flow</accion>
         <momento>Confirmación de solicitúd de credito</momento>
-        <accion>Preguntar si esta seguro de la información diligenciada y ejecutar advance_flow si acepta</accion>
+        <accion>Preguntar si esta seguro de la información diligenciada y ejecutar advance_flow si el usuario acepta</accion>
     </flujo_conversacion>
 </instrucciones_herramientas>`;
 
